@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// User model with role-based access control
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String
+  role      UserRole   @default(STAFF)
+  department String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  tickets        Ticket[]
+  maintenanceLogs MaintenanceLog[]
+
+  @@index([role])
+  @@index([email])
+}
+
+enum UserRole {
+  STAFF
+  IT_OFFICER
+  ADMIN
+}
+
+// Asset model for hardware tracking
+model Asset {
+  id            String     @id @default(cuid())
+  assetTag      String     @unique
+  assetType     AssetType  @default(COMPUTER)
+  department    String
+  cpu           String?
+  ram           String?
+  storage       String?
+  serialNumber  String     @unique
+  specifications Json?     // Flexible JSON field for type-specific fields
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  tickets          Ticket[]
+  maintenanceLogs  MaintenanceLog[]
+
+  @@index([department])
+  @@index([assetTag])
+  @@index([assetType])
+}
+
+enum AssetType {
+  COMPUTER
+  LAPTOP
+  PRINTER
+  MONITOR
+  SERVER
+  NETWORK_EQUIPMENT
+  TABLET
+  PHONE
+  OTHER
+}
+
+// Ticket model for IT helpdesk
+model Ticket {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  status      TicketStatus  @default(OPEN)
+  priority    Priority      @default(MEDIUM)
+  department  String?
+  reportedBy  String
+  assignedTo  String?
+  assetId     String?
+  resolution  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [reportedBy], references: [id])
+  asset  Asset? @relation(fields: [assetId], references: [id])
+
+  @@index([status])
+  @@index([priority])
+  @@index([reportedBy])
+  @@index([assetId])
+  @@index([department])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// MaintenanceLog model (append-only for audit integrity)
+model MaintenanceLog {
+  id           String   @id @default(cuid())
+  assetId      String
+  action       String   // "Checked", "Replaced", "Upgraded", etc.
+  description  String
+  ramDetails   String?  // RAM-specific details
+  testResult   String?  // "Pass", "Fail", etc.
+  technician   String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  asset  Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user   User  @relation(fields: [technician], references: [id])
+
+  @@index([assetId])
+  @@index([createdAt])
+}
