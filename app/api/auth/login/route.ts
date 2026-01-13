@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { SignJWT } from "jose"
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-in-production")
 
 export async function POST(request: NextRequest) {

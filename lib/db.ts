@@ -8,4 +8,6 @@ export const prisma =
     // log: ["query"], // Commented out to reduce console noise
   })
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma
+}

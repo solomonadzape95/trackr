@@ -2,6 +2,10 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth-utils"
 import { prisma } from "@/lib/db"
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 // GET - List all assets (with role-based filtering)
 export async function GET(request: NextRequest) {
   try {
